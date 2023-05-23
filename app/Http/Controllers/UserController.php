@@ -10,11 +10,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('api', ['except' => ['create']]);
-    }
-
     public function create(Request $request): JsonResponse
     {
         try {
@@ -35,35 +30,52 @@ class UserController extends Controller
     }
     public function index()
     {
-        $users = (new User)->users();
+        try {
+            $users = (new User)->users();
 
-        return UserResource::collection($users);
+            return UserResource::collection($users);
+        } catch (\Exception $e) {
+            return response()->json(['Errors' => [$e->getMessage()]], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        return new UserResource($user);
+            return new UserResource($user);
+        } catch (\Exception $e) {
+            return response()->json(['Errors' => [$e->getMessage()]], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     public function update(UserRequest $request, $id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        $data = $request->all();
-        $data['password'] = bcrypt($request->password);
-        $user->update($data);
+            $data = $request->all();
+            $data['password'] = bcrypt($request->password);
+            $user->update($data);
 
-        return new UserResource($user);
+            return new UserResource($user);
+        } catch (\Exception $e) {
+            return response()->json(['Errors' => [$e->getMessage()]], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function delete($id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        $user->delete();
+            $user->delete();
 
-        return 'Message: User deleted';
+            return response()->json(['Message:' => 'User deleted']);
+        } catch (\Exception $e) {
+            return response()->json(['Errors' => [$e->getMessage()]], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }
